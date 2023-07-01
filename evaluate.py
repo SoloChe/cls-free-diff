@@ -23,7 +23,7 @@ def sample(FLAGS, net_model, cemblayer, sampler, writer, step):
 
     with torch.no_grad():
         x_0 = sampler(x_T, cemb)
-        grid = (make_grid(x_0) + 1) / 2
+        grid = (make_grid(x_0, nrow=config.evaluate.sample_size) + 1) / 2
         path = os.path.join(
             FLAGS.img_dir, f'{step}_{config.evaluate.sampler}.png')
         save_image(grid, path)

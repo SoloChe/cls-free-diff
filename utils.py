@@ -12,7 +12,8 @@ def save_checkpoint(dir, state):
             'sched': state['sched'],
             'optim': state['optim'],
             'step': state['step'],
-            'ema_model': state['ema_model']
+            'ema_model': state['ema_model'],
+            'cemblayer': state['cemblayer']
             }
     torch.save(ckpt, os.path.join(dir, 'ckpt_{}.pt'.format(state['step'])))
     torch.save(ckpt, os.path.join(dir, 'ckpt.pt'))
@@ -89,3 +90,4 @@ class ConditionalEmbedding(nn.Module):
     def forward(self, t:torch.Tensor) -> torch.Tensor:
         emb = self.condEmbedding(t)
         return emb
+

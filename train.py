@@ -19,7 +19,7 @@ from evaluate import sample, evaluate
 
 
 def check_data(data_cycle, FLAGS):
-    samples = next(data_cycle) # with label
+    samples, _ = next(data_cycle) # with label
     images = make_grid(samples, nrow=8)
     save_image(images, os.path.join(FLAGS.img_dir, 'real_{}.png'.format(FLAGS.config.data.dataset)))
 
@@ -30,12 +30,12 @@ def train(FLAGS):
 
     # model initialization
     net_model = UNet(
-                    T=config.training.T, 
-                    ch=config.model.ch, 
-                    ch_mult=config.model.ch_mult, 
-                    attn=config.model.attn,
-                    num_res_blocks=config.model.num_res_blocks, 
-                    dropout=config.model.dropout)
+                    in_ch=config.model.in_ch, 
+                    mod_ch=config.model.mod_ch, 
+                    num_res_blocks=config.model.num_res_blocks,
+                    ch_mul=config.model.ch_mult,
+                    cdim=config.model.cdim,
+                    droprate=config.model.dropout)
     
     # label embedding
     cemblayer = ConditionalEmbedding(10, config.data.num_classes, 
@@ -95,8 +95,8 @@ def train(FLAGS):
         for step in pbar:
             # train
             optim.zero_grad()
-            x_0, lab = next(data_iter).to(FLAGS.device)
-
+            x_0, lab = next(data_iter)
+            x_0 = x_0.to(FLAGS.device)
             lab = lab.to(FLAGS.device)
             cemb = cemblayer(lab)
             cemb[np.where(np.random.rand(x_0.shape[0])<config.training.threshold)] = 0
@@ -120,14 +120,14 @@ def train(FLAGS):
             if config.evaluate.save_step > 0 and step % config.evaluate.save_step == 0:
                 state = {'net_model':net_model.state_dict(), 
                         'ema_model':ema_helper.state_dict(),
-                        'cemblayer':cemblayer.module.state_dict(), 
+                        'cemblayer':cemblayer.state_dict(), 
                         'sched':sched.state_dict(), 
                         'optim':optim.state_dict(), 
                         'step':step}
                 save_checkpoint(FLAGS.logging_dir, state)
 
             # sample
-            if config.evaluate.sample_step > 0 and step % config.evaluate.sample_step == 0:
+            if config.evaluate.sample_step > 0 and (step+1) % config.evaluate.sample_step == 0:
                 sample(FLAGS, net_model, cemblayer, net_sampler, writer, step)
                 
                 

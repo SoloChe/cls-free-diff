@@ -20,7 +20,7 @@ def get_config():
   config.training = training = ml_collections.ConfigDict()
   training.lr = 2e-4
   training.grad_clip = 1. 
-  training.total_steps = 30000
+  training.total_steps = 30001
   training.warmup = 5000
   training.batch_size = 64 
   training.num_workers = 4
@@ -37,11 +37,15 @@ def get_config():
   training.var_type =  'fixedlarge'
 
   config.training.ddim_eta = 0
-  config.training.num_ddim_steps = 50
+  config.training.num_ddim_steps = 20
   
   # UNet
   config.model = model = ml_collections.ConfigDict()
-  model.ch = 128 
+  model.in_ch = 3
+  model.mod_ch = 64
+  model.out_ch = 3
+  model.num_res_blocks = 2
+  model.cdim = 10 
   model.ch_mult = [1, 2, 2, 2]
   model.attn = [1] # add attention to these levels
   model.num_res_blocks = 2 # resblock in each level
@@ -49,7 +53,7 @@ def get_config():
 
   # evaluation
   config.evaluate = evaluate = ml_collections.ConfigDict()
-  evaluate.sample_size = 64
+  evaluate.sample_size = 5
   evaluate.sample_step = 10000
   evaluate.sampler = 'ddim' # ddim or ddpm
   evaluate.save_step = 10000

@@ -43,6 +43,7 @@ class DDPM_Sampler(Diffusion):
         super().__init__(config)
 
         self.model = model
+        self.w = config.evaluate.w
 
         self.register_buffer('betas', self.betas_)
 
@@ -108,7 +109,7 @@ class DDPM_Sampler(Diffusion):
         eps_cond = self.model(x_t, t, cemb)
         nu_emb = torch.zeros(cemb.shape, device = eps_cond.device)
         eps_uncond = self.model(x_t, t, nu_emb)
-        eps = (1+self.config.evalate.w)*eps_cond - self.config.evalate.w*eps_uncond
+        eps = (1+self.w)*eps_cond - self.w*eps_uncond
 
         x_0 = self.predict_x0_from_eps(x_t, t, eps=eps)
         mean, log_var = self.q_mean_variance(x_0, x_t, t)
@@ -124,14 +125,14 @@ class DDPM_Sampler(Diffusion):
         x_prev = mean + torch.exp(0.5 * log_var) * noise
         return x_prev
     
-    def forward(self, x_T):
+    def forward(self, x_T, cemb):
         """
         Algorithm 2.
         """
         x_t = x_T
         for time_step in reversed(range(self.T)):
             t = x_t.new_ones([x_T.shape[0], ], dtype=torch.long) * time_step 
-            x_t = self.p_sample(x_t, t)
+            x_t = self.p_sample(x_t, t, cemb)
         x_0 = x_t
         return torch.clip(x_0, -1, 1)
     
@@ -141,6 +142,7 @@ class DDIM_Sampler(Diffusion):
         super().__init__(config)
 
         self.model = model
+        self.w = config.evaluate.w
 
         self.register_buffer('ddim_sigma', self.ddim_sigma_)
 
@@ -180,9 +182,12 @@ class DDIM_Sampler(Diffusion):
         posterior_sigma = self.extract(self.ddim_sigma, idx, x_t.shape)
         return posterior_mean, posterior_sigma
     
-    def p_sample(self, x_t, t, idx):
-        
-        eps = self.model(x_t, t)
+    def p_sample(self, x_t, t, idx, cemb):
+
+        eps_cond = self.model(x_t, t, cemb)
+        nu_emb = torch.zeros(cemb.shape, device = eps_cond.device)
+        eps_uncond = self.model(x_t, t, nu_emb)
+        eps = (1+self.w)*eps_cond - self.w*eps_uncond
 
         x_0 = self.predict_x0_from_eps(x_t, idx, eps)
 
@@ -192,13 +197,13 @@ class DDIM_Sampler(Diffusion):
         
         return x_prev
 
-    def forward(self, x_T):
+    def forward(self, x_T, cemb):
         
         x_t = x_T
         for idx, time_step in enumerate(reversed(self.ddim_steps)):
             t = x_t.new_ones([x_T.shape[0], ], dtype=torch.long) * time_step 
             idx = x_t.new_ones([x_T.shape[0], ], dtype=torch.long) * (len(self.ddim_steps) - idx - 1)
-            x_t = self.p_sample(x_t, t, idx)
+            x_t = self.p_sample(x_t, t, idx, cemb)
         x_0 = x_t
         return torch.clip(x_0, -1, 1)
 

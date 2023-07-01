@@ -72,6 +72,7 @@ class EmbedSequential(nn.Sequential, EmbedBlock):
             else:
                 x = layer(x)
         return x
+    
 class ResBlock(EmbedBlock):
     def __init__(self, in_ch:torch.Tensor, out_ch:torch.Tensor, tdim:int, cdim:int, droprate:float):
         super().__init__()
@@ -213,11 +214,13 @@ class UNet(nn.Module):
             if i != len(self.ch_mul) - 1:
                 self.downblocks.append(EmbedSequential(Downsample(now_ch, now_ch, self.use_conv)))
                 chs.append(now_ch)
+
         self.middleblocks = EmbedSequential(
             ResBlock(now_ch, now_ch, tdim, tdim, self.droprate),
             AttnBlock(now_ch),
             ResBlock(now_ch, now_ch, tdim, tdim, self.droprate)
         )
+
         self.upblocks = nn.ModuleList([])
         for i, mul in list(enumerate(self.ch_mul))[::-1]:
             nxt_ch = mul * self.mod_ch
@@ -235,6 +238,7 @@ class UNet(nn.Module):
             nn.SiLU(),
             nn.Conv2d(now_ch, self.out_ch, 3, stride = 1, padding = 1)
         )
+        
     def forward(self, x:torch.Tensor, t:torch.Tensor, cemb:torch.Tensor) -> torch.Tensor:
         temb = self.temb_layer(timestep_embedding(t, self.mod_ch))
         cemb = self.cemb_layer(cemb)
