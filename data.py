@@ -233,8 +233,9 @@ class IXIDataset(Dataset):
         return image, self.filenames[idx]
 #%% cifar10
 def load_cifar10(config, train=True):
+    print(config.data.data_dir)
     return datasets.CIFAR10(
-                            config.data.data_dir, train=train, download=True, 
+                            root=config.data.data_dir, train=train, download=True, 
                             transform=transforms.Compose([
                                         transforms.RandomHorizontalFlip(),
                                         transforms.ToTensor(),

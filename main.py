@@ -19,7 +19,7 @@ FLAGS = flags.FLAGS
 config_flags.DEFINE_config_file('config', './config/cifar10.py', 'Training configuration.', lock_config=True)
 flags.DEFINE_string('logging_dir', './logs', 'The output directory.')
 flags.DEFINE_string('img_dir', './images', 'The sample image directory.')
-flags.DEFINE_enum('device', 'cuda', ['cpu', 'cuda'], 'device to use')
+flags.DEFINE_enum('device', 'cuda:2', ['cpu', 'cuda:0', 'cuda:1', 'cuda:2'], 'device to use')
 flags.DEFINE_string('restore_dir', None, 'restore checkpoint')
 flags.DEFINE_bool('training', True, 'training or testing')
 flags.DEFINE_enum('verbose', 'INFO', ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], 'logging level')
