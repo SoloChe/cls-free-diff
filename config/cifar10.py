@@ -7,7 +7,7 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.data_dir = './data'
+  data.data_dir = '/home/local/ASUAD/yche14/project/DATA/cifar10'
   data.dataset = 'CIFAR10'
   data.image_size = 32
   data.random_flip = True
@@ -22,7 +22,7 @@ def get_config():
   training.grad_clip = 1. 
   training.total_steps = 30001
   training.warmup = 5000
-  training.batch_size = 64 
+  training.batch_size = 128
   training.num_workers = 4
   training.ema_decay = 0.9999
   training.parallel = False
@@ -54,9 +54,9 @@ def get_config():
   # evaluation
   config.evaluate = evaluate = ml_collections.ConfigDict()
   evaluate.sample_size = 5
-  evaluate.sample_step = 10000
+  evaluate.sample_step = 5000
   evaluate.sampler = 'ddim' # ddim or ddpm
-  evaluate.save_step = 10000
+  evaluate.save_step = 5000
   evaluate.eval_step = 0 # frequency of evaluating model, 0 to disable during training
   evaluate.w = 1.8 # class-conditional sampling temperature
   
